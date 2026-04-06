@@ -1,0 +1,54 @@
+name: Claude Rooster
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 06:00 UTC
+    - cron: '0 11 * * *'  # 11:00 UTC
+    - cron: '0 16 * * *'  # 16:00 UTC
+    - cron: '0 21 * * *'  # 21:00 UTC
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: 'Prompt to send to Claude (leave blank to use default)'
+        required: false
+        default: ''
+
+env:
+  # Default prompt sent to Claude on each scheduled run.
+  DEFAULT_PROMPT: >
+    You are being invoked by Claude Rooster, a scheduled GitHub Actions workflow.
+    Please briefly summarise what tasks you could help with today.
+
+jobs:
+  wake-claude:
+    name: Wake Claude Code
+    runs-on: ubuntu-latest
+    permissions: {}
+
+    steps:
+      - name: Call Claude via Anthropic API
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          PROMPT="${{ github.event.inputs.prompt }}"
+          if [ -z "$PROMPT" ]; then
+            PROMPT="${{ env.DEFAULT_PROMPT }}"
+          fi
+
+          echo "Calling Anthropic API..."
+
+          RESPONSE=$(curl -fS https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "$(jq -n \
+              --arg model "claude-opus-4-5" \
+              --arg prompt "$PROMPT" \
+              '{
+                model: $model,
+                max_tokens: 1024,
+                messages: [{ role: "user", content: $prompt }]
+              }')")
+
+          echo "Response received:"
+          echo "$RESPONSE" | jq -r '.content[0].text // "No text content in response"'
