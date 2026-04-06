@@ -4,22 +4,12 @@ Wakes Claude Code up via GitHub Actions scheduled events to optimise session tim
 
 ## How it works
 
-A GitHub Actions workflow runs on an hourly cron trigger. At each hourly tick it
-checks the current UTC time against a configurable list of target times stored in a
-**repository variable**. When the current time matches one of those slots, it calls
-the [Anthropic Messages API](https://docs.anthropic.com/en/api/messages) and prints
-Claude's response to the workflow log.
+A GitHub Actions workflow runs at four fixed times each day (UTC). At each trigger it
+calls the [Anthropic Messages API](https://docs.anthropic.com/en/api/messages) and
+prints Claude's response to the workflow log.
 
 ```
-GitHub Actions (hourly cron)
-        │
-        ▼
-  Check current UTC time
-  against SCHEDULE_TIMES variable
-        │
-  time matches? ──no──► skip (job exits cleanly)
-        │
-       yes
+GitHub Actions (06:00 / 11:00 / 16:00 / 21:00 UTC)
         │
         ▼
   POST /v1/messages  ──►  Anthropic API  ──►  Claude response logged
@@ -36,20 +26,7 @@ and create a secret named:
 |--------|-------|
 | `ANTHROPIC_API_KEY` | Your Anthropic API key |
 
-### 2. Configure the schedule times (optional)
-
-The workflow checks the repository variable `SCHEDULE_TIMES` for a comma-separated
-list of `HH:MM` times in **UTC**. If the variable is not set it falls back to
-`09:00,13:00,17:00`.
-
-In your repository go to **Settings → Secrets and variables → Actions → Variables**
-and create a variable named:
-
-| Variable | Example value | Description |
-|----------|---------------|-------------|
-| `SCHEDULE_TIMES` | `08:00,12:00,18:00` | Comma-separated UTC times to call Claude |
-
-### 3. Trigger manually (optional)
+### 2. Trigger manually (optional)
 
 You can also invoke the workflow at any time from
 **Actions → Claude Rooster → Run workflow**. An optional *Prompt* input lets you
@@ -63,5 +40,4 @@ Key environment variables defined at the top of the workflow:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `DEFAULT_SCHEDULE_TIMES` | `09:00,13:00,17:00` | Fallback times used when `SCHEDULE_TIMES` repo variable is not set |
 | `DEFAULT_PROMPT` | *(see file)* | Prompt sent to Claude on each scheduled run |
