@@ -16,8 +16,7 @@ on:
 env:
   # Default prompt sent to Claude on each scheduled run.
   # Approximately 26.1k tokens with Haiku model
-  DEFAULT_PROMPT: >
-    hi
+  DEFAULT_PROMPT: "hi"
 
 jobs:
   wake-claude:
