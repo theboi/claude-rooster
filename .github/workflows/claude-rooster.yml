@@ -41,4 +41,16 @@ jobs:
 
           echo "Calling Claude Code..."
 
-          claude -p "$PROMPT"
+          if claude -p "$PROMPT" 2>&1 | tee /tmp/claude_output.log; then
+            echo "Claude Code completed successfully."
+            exit 0
+          else
+            # Check if the error is the expected "exceeded token maximum" error
+            if grep -q "exceeded the 1 output token maximum" /tmp/claude_output.log; then
+              echo "Caught expected token limit error - ignoring and marking as passed."
+              exit 0
+            else
+              echo "Unexpected error occurred."
+              exit 1
+            fi
+          fi
