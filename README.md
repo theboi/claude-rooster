@@ -17,6 +17,8 @@ and create a secret named:
 |--------|-------|
 | `CLAUDE_CODE_OAUTH_TOKEN` | Your OAuth token |
 
+IMPORTANT: ensure the copied token does NOT include a newline (when copying from the terminal with line wrapping, the newline is copied also). The Action will throw "API Error: Headers.append: "***\n ***" is an invalid header value."
+
 Set the cron timings and default prompt to wake Claude up via the `claude-rooster.yml` file.
 
 | Variable | Default | Description |
