@@ -1,0 +1,82 @@
+name: Claude Rooster
+
+on:
+  schedule:
+    # Runs every hour; actual execution times are controlled by the
+    # SCHEDULE_TIMES repository variable (see README for details).
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: 'Prompt to send to Claude (leave blank to use default)'
+        required: false
+        default: ''
+
+env:
+  # Fallback schedule times (comma-separated HH:MM in UTC).
+  # Override this by setting a SCHEDULE_TIMES repository variable.
+  DEFAULT_SCHEDULE_TIMES: '09:00,13:00,17:00'
+  # Default prompt sent to Claude on each scheduled run.
+  DEFAULT_PROMPT: >
+    You are being invoked by Claude Rooster, a scheduled GitHub Actions workflow.
+    Please briefly summarise what tasks you could help with today.
+
+jobs:
+  wake-claude:
+    name: Wake Claude Code
+    runs-on: ubuntu-latest
+    permissions: {}
+
+    steps:
+      - name: Check if current time matches a scheduled slot
+        id: check-timing
+        run: |
+          SCHEDULE_TIMES="${{ vars.SCHEDULE_TIMES }}"
+          if [ -z "$SCHEDULE_TIMES" ]; then
+            SCHEDULE_TIMES="${{ env.DEFAULT_SCHEDULE_TIMES }}"
+          fi
+
+          CURRENT_TIME=$(date -u +"%H:%M")
+          echo "Current UTC time: $CURRENT_TIME"
+          echo "Configured schedule times: $SCHEDULE_TIMES"
+
+          SHOULD_RUN=false
+          IFS=',' read -ra TIMES <<< "$SCHEDULE_TIMES"
+          for slot in "${TIMES[@]}"; do
+            slot="$(echo "$slot" | xargs)"  # trim whitespace
+            if [ "$CURRENT_TIME" = "$slot" ]; then
+              SHOULD_RUN=true
+              break
+            fi
+          done
+
+          echo "should_run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
+          echo "Scheduled run: $SHOULD_RUN"
+
+      - name: Call Claude via Anthropic API
+        if: steps.check-timing.outputs.should_run == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          PROMPT="${{ github.event.inputs.prompt }}"
+          if [ -z "$PROMPT" ]; then
+            PROMPT="${{ env.DEFAULT_PROMPT }}"
+          fi
+
+          echo "Calling Anthropic API..."
+
+          RESPONSE=$(curl -fS https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "$(jq -n \
+              --arg model "claude-opus-4-5" \
+              --arg prompt "$PROMPT" \
+              '{
+                model: $model,
+                max_tokens: 1024,
+                messages: [{ role: "user", content: $prompt }]
+              }')")
+
+          echo "Response received:"
+          echo "$RESPONSE" | jq -r '.content[0].text // "No text content in response"'
