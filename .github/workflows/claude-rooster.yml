@@ -2,22 +2,21 @@ name: Claude Rooster
 
 on:
   schedule:
-    - cron: '0 6 * * *'   # 06:00 UTC
-    - cron: '0 11 * * *'  # 11:00 UTC
-    - cron: '0 16 * * *'  # 16:00 UTC
-    - cron: '0 21 * * *'  # 21:00 UTC
+    - cron: '0 22 * * *'   # 06:00 SGT
+    - cron: '0 3 * * *'  # 11:00 SGT
+    - cron: '0 8 * * *'  # 16:00 SGT
+    - cron: '0 13 * * *'  # 21:00 SGT
   workflow_dispatch:
     inputs:
       prompt:
-        description: 'Prompt to send to Claude (leave blank to use default)'
+        description: 'Custom prompt to send to Claude.'
         required: false
         default: ''
 
 env:
   # Default prompt sent to Claude on each scheduled run.
   DEFAULT_PROMPT: >
-    You are being invoked by Claude Rooster, a scheduled GitHub Actions workflow.
-    Please briefly summarise what tasks you could help with today.
+    /clear say yes/no only.
 
 jobs:
   wake-claude:
@@ -37,16 +36,16 @@ jobs:
 
           echo "Calling Anthropic API..."
 
-          RESPONSE=$(curl -fS https://api.anthropic.com/v1/messages \
+          RESPONSE=$(curl -fS -X POST https://api.anthropic.com/v1/messages \
             -H "x-api-key: $ANTHROPIC_API_KEY" \
             -H "anthropic-version: 2023-06-01" \
             -H "content-type: application/json" \
             -d "$(jq -n \
-              --arg model "claude-opus-4-5" \
+              --arg model "claude-haiku-4-5" \
               --arg prompt "$PROMPT" \
               '{
                 model: $model,
-                max_tokens: 1024,
+                max_tokens: 1,
                 messages: [{ role: "user", content: $prompt }]
               }')")
 
