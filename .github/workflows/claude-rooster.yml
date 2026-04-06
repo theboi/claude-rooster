@@ -42,4 +42,4 @@ jobs:
 
           echo "Calling Claude Code..."
 
-          claude -p $PROMPT
+          claude -p "$PROMPT"
