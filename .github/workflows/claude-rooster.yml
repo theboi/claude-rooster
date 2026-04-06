@@ -15,8 +15,7 @@ on:
 
 env:
   # Default prompt sent to Claude on each scheduled run.
-  DEFAULT_PROMPT: >
-    /clear say yes/no only.
+  DEFAULT_PROMPT: "hi" # approximately 26.1k tokens with Haiku model
 
 jobs:
   wake-claude:
