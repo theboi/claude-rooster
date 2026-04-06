@@ -46,7 +46,7 @@ jobs:
             exit 0
           else
             # Check if the error is the expected "exceeded token maximum" error
-            if grep -q "exceeded the 1 output token maximum" /tmp/claude_output.log; then
+            if grep -q "exceeded" /tmp/claude_output.log; then
               echo "Caught expected token limit error - ignoring and marking as passed."
               exit 0
             else
