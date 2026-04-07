@@ -2,10 +2,10 @@ name: Claude Rooster
 
 on:
   schedule:
-    - cron: '0 22 * * *'   # 06:00 SGT
-    - cron: '0 3 * * *'  # 11:00 SGT
-    - cron: '0 8 * * *'  # 16:00 SGT
-    - cron: '0 13 * * *'  # 21:00 SGT
+    - cron: '25 21 * * *'   # 06:00 SGT
+    - cron: '25 2 * * *'  # 11:00 SGT
+    - cron: '25 7 * * *'  # 16:00 SGT
+    - cron: '25 12 * * *'  # 21:00 SGT
   workflow_dispatch:
     inputs:
       prompt:
